@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrackWare</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .search-container, .filters-container {
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .search-input {
+            width: 80%;
+            padding: 10px;
+            font-size: 1.2em;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        .filters-container select {
+            font-size: 1.1em;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px;
+        }
+
+        #container {
+            max-width: 1000px;
+            margin: 20px auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .download-item {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            margin: 10px 0;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .file-size, .upload-date {
+            font-size: 14px;
+            color: #777;
+        }
+        .upload-date {
+            margin-bottom: 10px;
+        }
+
+        .download-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .download-button:hover {
+            background-color: #45a049;
+        }
+
+        .total-count {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>CrackWare</h1>
+</header>
+
+<div class="search-container">
+    <input type="text" id="search" class="search-input" placeholder="Search games..." oninput="filterGames()">
+</div>
+
+<div class="filters-container">
+    <select id="categoryFilter" onchange="filterGames()" hidden>
+        <option value="">Tümü</option>
+        <option value="Fitgirl">FitGirl</option>
+        <option value="GOG">GOG</option>
+        <option value="DODI">DODI</option>
+        <option value="AtopGames">AtopGames</option>
+        <option value="xEMPRESS">xEMPRESS</option>
+        <option value="KaOsKrew">KaOsKrew</option>
+        <option value="onlinefix">OnlineFix</option>
+        <option value="SteamRip_Software">SteamRip Software</option>
+        <option value="SteamRip">SteamRip</option>
+        <option value="TinyRepacks">TinyRepacks</option>
+        <option value="Xatab">Xatab</option>
+    </select>
+    <select id="sizeFilter" onchange="filterGames()">
+        <option value="">File Size</option>
+        <option value="small">Small (1GB - 10GB)</option>
+        <option value="medium">Medium (10GB - 50GB)</option>
+        <option value="large">Large (50GB and above)</option>
+    </select>
+    <select id="sortFilter" onchange="filterGames()">
+        <option value="date-desc">By Upload Date (Newest to Oldest)</option>
+        <option value="date-asc">By Upload Date (Oldest to Newest)</option>
+        <option value="title-asc">By Title (A-Z)</option>
+        <option value="title-desc">By Title (Z-A)</option>
+        <option value="size-asc">By Size (Small to Large)</option>
+        <option value="size-desc">By Size (Large to Small)</option>
+        
+
+    </select>
+</div>
+
+<div id="container">
+    <h2>Games</h2>
+    <h4>To download, you must have a torrent client installed on your computer</h4>
+    <div id="data-list"></div>
+    <div id="total-count" class="total-count"></div> <!-- Toplam oyun sayısını buraya yazdıracağız -->
+</div>
+
+<script src="crackDB/atop-games.js"></script>
+<script src="crackDB/dodi.js"></script>
+<script src="crackDB/empress.js"></script>
+<script src="crackDB/fitgirl.js"></script>
+<script src="crackDB/gog.js"></script>
+<script src="crackDB/kaoskrew.js"></script>
+<script src="crackDB/onlinefix.js"></script>
+<script src="crackDB/steamrip-software.js"></script>
+<script src="crackDB/steamrip.js"></script>
+<script src="crackDB/tinyrepacks.js"></script>
+<script src="crackDB/xatab.js"></script>
+
+<script>
+    // Bütün verileri birleştiriyoruz
+    const allGames = [AtopGames, DODI, xEMPRESS, FitGirl, GOG, KaOsKrew, onlinefix, SteamRIP_Software, SteamRip, TinyRepacks, Xatab];
+
+    // Dosya boyutunu GB cinsine çeviren fonksiyon
+    function parseFileSize(fileSizeStr) {
+        const sizeInGB = parseFloat(fileSizeStr.split(' ')[0]);
+        return sizeInGB;
+    }
+
+    // Filtreleme ve sıralama fonksiyonu
+    function filterGames() {
+        const searchText = document.getElementById('search').value.toLowerCase();
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const sizeFilter = document.getElementById('sizeFilter').value;
+        const sortFilter = document.getElementById('sortFilter').value;
+
+        // Filtrelenmiş oyunları bulma
+        let filteredGames = [];
+        allGames.forEach(gameCategory => {
+            const games = gameCategory.downloads;
+            games.forEach(game => {
+                const matchesTitle = game.title.toLowerCase().includes(searchText);
+
+                // Kategori filtresi
+                const matchesCategory = categoryFilter ? game.category === categoryFilter : true;
+
+                // Boyut filtresi
+                const gameSizeInGB = parseFileSize(game.fileSize);
+                let matchesSize = false;
+                if (sizeFilter === "small" && gameSizeInGB >= 1 && gameSizeInGB <= 10) {
+                    matchesSize = true;
+                } else if (sizeFilter === "medium" && gameSizeInGB > 10 && gameSizeInGB <= 50) {
+                    matchesSize = true;
+                } else if (sizeFilter === "large" && gameSizeInGB > 50) {
+                    matchesSize = true;
+                } else if (!sizeFilter) {
+                    matchesSize = true;
+                }
+
+                // Eğer başlık, kategori ve boyut filtresine uyuyorsa, bu oyunu listeye ekle
+                if (matchesTitle && matchesCategory && matchesSize) {
+                    filteredGames.push(game);
+                }
+            });
+        });
+
+        // Sıralama işlemi
+        if (sortFilter) {
+            filteredGames.sort((a, b) => {
+                if (sortFilter === "title-asc") {
+                    return a.title.localeCompare(b.title);
+                } else if (sortFilter === "title-desc") {
+                    return b.title.localeCompare(a.title);
+                } else if (sortFilter === "size-asc") {
+                    return parseFileSize(a.fileSize) - parseFileSize(b.fileSize);
+                } else if (sortFilter === "size-desc") {
+                    return parseFileSize(b.fileSize) - parseFileSize(a.fileSize);
+                } else if (sortFilter === "date-asc") {
+                    return new Date(a.uploadDate) - new Date(b.uploadDate);
+                } else if (sortFilter === "date-desc") {
+                    return new Date(b.uploadDate) - new Date(a.uploadDate);
+                }
+            });
+        }
+
+        // İlk 10 oyunu göster
+        const displayedGames = filteredGames.slice(0, 10);
+
+        // Listeyi göster
+        const listContainer = document.getElementById('data-list');
+        listContainer.innerHTML = '';
+        displayedGames.forEach(game => {
+            const gameItem = document.createElement('div');
+            gameItem.classList.add('download-item');
+            gameItem.innerHTML = `
+                <div class="title">${game.title}</div>
+                <div class="file-size">File Size: ${game.fileSize}</div>
+                <div class="upload-date">Date: ${new Date(game.uploadDate).toLocaleDateString()}</div>
+                <a href="${game.uris[0]}" class="download-button" target="_blank">Download</a>
+            `;
+            listContainer.appendChild(gameItem);
+        });
+
+        // Toplam oyun sayısını yazdırma
+        const totalCountContainer = document.getElementById('total-count');
+        const totalGamesCount = allGames.reduce((total, gameCategory) => total + gameCategory.downloads.length, 0);
+        totalCountContainer.innerHTML = `Toplam Oyun Sayısı: ${totalGamesCount}<br>Discord:bubss`;
+    }
+
+    // Sayfa yüklendiğinde oyunları filtrele ve göster
+    window.onload = function() {
+        filterGames(); // İlk yüklemede oyunları göster
+    };
+</script>
+
+</body>
+</html>
